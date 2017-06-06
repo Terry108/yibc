@@ -7,24 +7,24 @@ import (
 )
 
 //交易队列通道
-type TransactionQuene chan *Transaction
+type TransactionsQueue chan *Transaction
 
 //区块队列通道
-type BlockQuene chan Block
+type BlocksQueue chan Block
 
 //区块结构
-type BlockChain struct {
+type Blockchain struct {
 	CurrentBlock Block //当前区块
 	BlockSlice         //区块切片
 
-	TransactionQuene
-	BlockQuene
+	TransactionsQueue
+	BlocksQueue
 }
 
 //初始化区块链
-func SetupBlockChain() *BlockChain {
-	bc := new(BlockChain)
-	//TransactionQuene, BlockQuene := make(TransactionQuene), make(BlockQuene)
+func SetupBlockChain() *Blockchain {
+	bc := new(Blockchain)
+	bc.TransactionsQueue, bc.BlocksQueue = make(TransactionsQueue), make(BlocksQueue)
 
 	//TODO:从区块文件中读取
 	bc.CurrentBlock = bc.CreateNewBlock()
@@ -32,7 +32,7 @@ func SetupBlockChain() *BlockChain {
 }
 
 //创建新区块
-func (bc *BlockChain) CreateNewBlock() Block {
+func (bc *Blockchain) CreateNewBlock() Block {
 	prev := bc.BlockSlice.PreviousBlock()
 
 	prevBlockHash := []byte{}
@@ -46,25 +46,25 @@ func (bc *BlockChain) CreateNewBlock() Block {
 }
 
 //向区块链中添加区块
-func (bc *BlockChain) AddBlock(b Block) {
+func (bc *Blockchain) AddBlock(b Block) {
 	bc.BlockSlice = append(bc.BlockSlice, b)
 }
 
 //启动区块链
-func (bc *BlockChain) Run() {
+func (bc *Blockchain) Run() {
 	interruptBlockGen := bc.GenerateBlock()
 	for {
 		select {
 		//处理交易
-		case tr := <-bc.TransactionQuene:
+		case tr := <-bc.TransactionsQueue:
 			if bc.CurrentBlock.TransactionSlice.Exists(*tr) {
 				continue
 			}
-			if !tr.VerifyTransaction(TRANSCATION_POW) {
+			if !tr.VerifyTransaction(TRANSACTION_POW) {
 				fmt.Println("收到未经验证的交易信息:", tr)
 				continue
 			}
-			bc.CurrentBlock.AddTransaction(*tr)
+			bc.CurrentBlock.AddTransaction(tr)
 			interruptBlockGen <- bc.CurrentBlock
 			//将交易广播到网络
 			mes := NewMessage(MESSAGE_SEND_TRANSACTION)
@@ -74,15 +74,16 @@ func (bc *BlockChain) Run() {
 			self.Network.BroadcastQueue <- *mes
 
 		//区块处理
-		case b := <-bc.BlockQuene:
-			if bc.Exists(b) {
+		case b := <-bc.BlocksQueue:
+			if bc.BlockSlice.Exists(b) {
+				fmt.Println("区块已存在")
 				continue
 			}
 			if !b.VerifyBlock(BLOCK_POW) {
 				fmt.Println("区块未验证通过，不符合难度要求。")
 				continue
 			}
-			if !reflect.DeepEqual(b.PreBlock, bc.CurrentBlock.Hash()) {
+			if reflect.DeepEqual(b.PreBlock, bc.CurrentBlock.Hash()) {
 				//TODO：区块孤儿池的实现
 				fmt.Println("缺失区块")
 			} else {
@@ -131,7 +132,7 @@ func DiffTransactionSlices(a, b TransactionSlice) (diff TransactionSlice) {
 
 //生成区块
 //当收到新的区块或交易时，打断挖矿，重新开始挖矿
-func (bc *BlockChain) GenerateBlock() chan Block {
+func (bc *Blockchain) GenerateBlock() chan Block {
 	//当收到新的区块时，打断当前挖矿计算
 	interrupt := make(chan Block)
 
@@ -142,17 +143,17 @@ func (bc *BlockChain) GenerateBlock() chan Block {
 		block.BlockHeader.MerkelRoot = block.GenerateMerkelRoot()
 		block.BlockHeader.Nonce = 0
 		block.BlockHeader.TimeStamp = uint32(time.Now().Unix())
-		for {
+		for true {
 			sleepTime := time.Nanosecond
 			if block.TransactionSlice.Len() > 0 {
 				if CheckProofofWork(BLOCK_POW, block.Hash()) {
 
 					block.Signture = block.Sign(self.Keypair)
-					bc.BlockQuene <- block
+					bc.BlocksQueue <- block
 					sleepTime = time.Hour * 24
-					fmt.Println("哇！挖矿成功，生成区块！")
+					fmt.Println("恭喜~挖矿成功，生成区块！")
 				} else {
-					block.BlockHeader.Nonce++
+					block.BlockHeader.Nonce += 1
 				}
 			} else {
 				sleepTime = time.Hour * 24

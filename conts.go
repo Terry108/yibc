@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 const (
-	BLOCKCHAIN_PORT  = "9119"
+	BLOCKCHAIN_PORT  = "9207"
 	NETWORK_KEY_SIZE = 80
 	KEY_SIZE         = 28
 
@@ -32,7 +32,7 @@ const (
 	MESSAGE_SEND_BLOCK
 )
 
-func SEED_NODE() []string {
+func SEED_NODES() []string {
 	nodes := []string{"10.0.5.33"}
 	for i := 0; i < 100; i++ {
 		nodes = append(nodes, fmt.Sprintf("172.17.0.%d", i))

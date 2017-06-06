@@ -27,7 +27,7 @@ func getDirectoryWithBaseDir(dir string) string {
 func OpenConfiguration(dir string) (*Keypair, error) {
 	dir = getDirectoryWithBaseDir(dir)
 	//Create ~/.blockchain directory
-	err := os.Mkdir(dir, 0777)
+	err := os.MkdirAll(dir, 0777)
 	logOnError(err)
 
 	//Search for keys file inside directory

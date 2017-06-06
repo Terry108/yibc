@@ -29,7 +29,7 @@ func NewBlock(previousBlock []byte) Block {
 }
 
 //添加交易信息
-func (b *Block) AddTranscation(t *Transaction) {
+func (b *Block) AddTransaction(t *Transaction) {
 	newSlice := b.TransactionSlice.AddTransaction(*t)
 	b.TransactionSlice = &newSlice
 }

@@ -10,7 +10,7 @@ import (
 )
 
 //连接通道
-type ConnectionQueue chan string
+type ConnectionsQueue chan string
 
 //节点通道
 type NodeChannel chan *Node
@@ -27,7 +27,7 @@ type Nodes map[string]*Node
 //定义网络结构
 type Network struct {
 	Nodes //节点映射，当前已连接的节点字典
-	ConnectionQueue
+	ConnectionsQueue
 	Address            string
 	ConnectionCallBack NodeChannel
 	BroadcastQueue     chan Message //广播通道
@@ -97,6 +97,10 @@ func (n *Network) Run() {
 		select {
 		case node := <-listenCb:
 			self.Nodes.AddNode(node)
+		case node := <-n.ConnectionCallBack:
+			self.Nodes.AddNode(node)
+		case message := <-n.BroadcastQueue:
+			go n.BroadcastMessage(message)
 		}
 	}
 }
@@ -106,7 +110,7 @@ func SetupNetwork(address, port string) *Network {
 	n := new(Network)
 
 	n.BroadcastQueue, n.IncomingMessages = make(chan Message), make(chan Message)
-	n.ConnectionQueue, n.ConnectionCallBack = CreateConnectionQueue()
+	n.ConnectionsQueue, n.ConnectionCallBack = CreateConnectionQueue()
 	n.Nodes = Nodes{}
 
 	n.Address = address
@@ -114,8 +118,8 @@ func SetupNetwork(address, port string) *Network {
 }
 
 //创建连接队列，处理连接请求
-func CreateConnectionQueue() (ConnectionQueue, NodeChannel) {
-	in := make(ConnectionQueue)
+func CreateConnectionQueue() (ConnectionsQueue, NodeChannel) {
+	in := make(ConnectionsQueue)
 	out := make(NodeChannel)
 
 	go func() {
