@@ -62,7 +62,27 @@ func CreateTransaction(txt string) *Transaction {
 	return t
 }
 
-//处理
+//处理传入信息：交易信息和区块信息
+func HandleIncomingMessage(msg Message) {
+	switch msg.Identifier {
+	case MESSAGE_SEND_TRANSACTION:
+		t := new(Transaction)
+		_, err := t.UnmarshalBinary(msg.Data)
+		if err != nil {
+			networkError(err)
+			break
+		}
+		self.BlockChain.TransactionQuene <- t
+	case MESSAGE_SEND_BLOCK:
+		b := new(Block)
+		err := b.UnmarshalBinary(msg.Data)
+		if err != nil {
+			networkError(err)
+			break
+		}
+		self.BlockChain.BlockQuene <- *b
+	}
+}
 
 func ReadStdin() chan string {
 	cb := make(chan string)
