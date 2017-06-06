@@ -4,11 +4,12 @@
 package main
 
 import (
-	"base58"
 	"crypto/ecdsa"    //椭圆加密算法
 	"crypto/elliptic" //椭圆曲线
 	"crypto/rand"     //为随机数
 	"math/big"        //大整数
+
+	"github.com/tv42/base58"
 )
 
 //密钥对

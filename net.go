@@ -197,7 +197,7 @@ func GetIpAddress() []string {
 	if err != nil {
 		return nil
 	}
-	addrs, err := net.LookupAddr(name)
+	addrs, err := net.LookupHost(name)
 	if err != nil {
 		return nil
 	}

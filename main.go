@@ -50,7 +50,7 @@ func main() {
 		case str := <-stdin:
 			self.BlockChain.TransactionQuene <- CreateTransaction(str)
 		case msg := <-self.Network.IncomingMessages:
-
+			HandleIncomingMessage(msg)
 		}
 	}
 }
