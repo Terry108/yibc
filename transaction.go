@@ -20,8 +20,8 @@ type TranscationHeader struct {
 	From          []byte //交易发送方
 	To            []byte //交易接受方
 	TimeStamp     uint32 //时间戳
-	PayloadHash   []byte
-	PayloadLength uint32
+	PayloadHash   []byte //sha256(交易数据)
+	PayloadLength uint32 //交易数据长度
 	Nonce         uint32 //随机数
 }
 
