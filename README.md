@@ -26,6 +26,7 @@ Blockchain, learn and have a try
 交易详情
 ## 消息
 消息类型：
+
 	const (
 	MESSAGE_GET_NODES = iota + 20
 	MESSAGE_SEND_NODES
