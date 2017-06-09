@@ -26,7 +26,7 @@ Blockchain, learn and have a try
 交易详情
 ## 消息
 消息类型：
-const (
+	const (
 	MESSAGE_GET_NODES = iota + 20
 	MESSAGE_SEND_NODES
 
@@ -35,7 +35,8 @@ const (
 
 	MESSAGE_GET_BLOCK
 	MESSAGE_SEND_BLOCK
-)
+	)
+
 Options    []byte //消息类型，包括交易和区块信息
 Data       []byte //消息内容
 
